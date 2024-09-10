@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"fmt"
@@ -17,10 +17,6 @@ import (
 var (
 	schedule         string
 	restoreOnStartup bool
-	rootCmd          = &cobra.Command{
-		Use:   "pg-s3-backup",
-		Short: "Backup and restore PostgreSQL databases to/from S3",
-	}
 )
 
 func init() {
@@ -34,23 +30,15 @@ func init() {
 	rootCmd.AddCommand(backupCmd)
 }
 
-func main() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
-
 func backupAction(cmd *cobra.Command, args []string) {
 	if schedule != "" {
 		if restoreOnStartup {
-			// Restore the database before starting the backup
 		}
 		s, err := gocron.NewScheduler()
 		if err != nil {
 			log.Fatalf("Error creating scheduler: %v", err)
 		}
-		_, err = s.NewJob(gocron.CronJob(schedule, true), gocron.NewTask(performBackup))
+		_, err = s.NewJob(gocron.CronJob(schedule, false), gocron.NewTask(performBackup))
 		if err != nil {
 			log.Fatalf("Error setting up cron job: %v", err)
 		}

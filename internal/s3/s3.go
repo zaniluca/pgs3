@@ -2,6 +2,7 @@ package s3
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -69,4 +70,25 @@ func (c S3Client) RemoveOldBackups(bucket string, before time.Time) error {
 	}
 
 	return nil
+}
+
+func (c S3Client) DownloadFile(bucket, key, file string) (*os.File, error) {
+	fmt.Printf("Downloading %s/%s to %s\n", bucket, key, file)
+	localFile, err := os.Create(file)
+	if err != nil {
+		return nil, err
+	}
+	defer localFile.Close()
+
+	resp, err := c.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	_, err = io.Copy(localFile, resp.Body)
+	return localFile, err
 }
