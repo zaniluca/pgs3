@@ -1,4 +1,4 @@
-module pg-s3-backup
+module github.com/zaniluca/pg-s3-toolkit
 
 go 1.22.1
 

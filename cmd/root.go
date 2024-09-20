@@ -9,7 +9,7 @@ import (
 
 var (
 	rootCmd = &cobra.Command{
-		Use:   "pg-s3-backup",
+		Use:   "pg-s3-toolkit",
 		Short: "Backup and restore PostgreSQL databases to/from S3",
 	}
 )

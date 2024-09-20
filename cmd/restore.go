@@ -5,8 +5,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"pg-s3-backup/internal/env"
-	"pg-s3-backup/internal/s3"
+
+	"github.com/zaniluca/pg-s3-toolkit/internal/env"
+	"github.com/zaniluca/pg-s3-toolkit/internal/s3"
 
 	"github.com/spf13/cobra"
 )

@@ -1,6 +1,6 @@
 package main
 
-import "pg-s3-backup/cmd"
+import "github.com/zaniluca/pg-s3-toolkit/cmd"
 
 func main() {
 	cmd.Execute()
