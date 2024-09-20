@@ -3,6 +3,7 @@ package s3
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -49,7 +50,7 @@ func (c S3Client) UploadFile(bucket, file string) error {
 }
 
 func (c S3Client) RemoveOldBackups(bucket string, before time.Time) error {
-	fmt.Printf("Removing backups older than %s\n", before)
+	log.Printf("Removing backups older than %s\n", before)
 	resp, err := c.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(bucket)})
 	if err != nil {
 		return err
@@ -73,7 +74,7 @@ func (c S3Client) RemoveOldBackups(bucket string, before time.Time) error {
 }
 
 func (c S3Client) DownloadFile(bucket, key, file string) (*os.File, error) {
-	fmt.Printf("Downloading %s/%s to %s\n", bucket, key, file)
+	log.Printf("Downloading %s/%s to %s\n", bucket, key, file)
 	localFile, err := os.Create(file)
 	if err != nil {
 		return nil, err
@@ -91,4 +92,24 @@ func (c S3Client) DownloadFile(bucket, key, file string) (*os.File, error) {
 
 	_, err = io.Copy(localFile, resp.Body)
 	return localFile, err
+}
+
+func (c S3Client) LatestBackup(bucket string) (string, error) {
+	resp, err := c.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(bucket)})
+	if err != nil {
+		return "", err
+	}
+
+	if len(resp.Contents) == 0 {
+		return "", fmt.Errorf("no backups found in bucket %s", bucket)
+	}
+
+	latest := resp.Contents[0]
+	for _, item := range resp.Contents {
+		if item.LastModified.After(*latest.LastModified) {
+			latest = item
+		}
+	}
+
+	return *latest.Key, nil
 }

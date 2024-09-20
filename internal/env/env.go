@@ -2,6 +2,7 @@ package env
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 )
@@ -36,13 +37,25 @@ func Load() (*Env, error) {
 		PgDumpExtraOpts:   os.Getenv("PGDUMP_EXTRA_OPTS"),
 	}
 
-	if env.S3Bucket == "" || env.PostgresDatabase == "" || env.PostgresHost == "" ||
-		env.PostgresUser == "" || env.PostgresPassword == "" {
-		return nil, fmt.Errorf("missing required environment variables")
+	if env.S3AccessKeyID == "" || env.S3SecretAccessKey == "" {
+		return nil, fmt.Errorf("missing S3 credentials, set S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY environment variables")
+	}
+
+	if env.S3Region == "" || env.S3Bucket == "" {
+		return nil, fmt.Errorf("missing S3 configuration, set S3_REGION and S3_BUCKET environment variables")
+	}
+
+	if env.PostgresDatabase == "" || env.PostgresUser == "" || env.PostgresPassword == "" {
+		return nil, fmt.Errorf("missing PostgreSQL configuration, set POSTGRES_DATABASE, POSTGRES_USER and POSTGRES_PASSWORD environment variables")
+	}
+
+	if env.PostgresHost == "" {
+		log.Println("POSTGRES_HOST not set, defaulting to localhost")
+		env.PostgresHost = "localhost"
 	}
 
 	if env.PostgresPort == "" {
-		fmt.Println("POSTGRES_PORT not set, defaulting to 5432")
+		log.Println("POSTGRES_PORT not set, defaulting to 5432")
 		env.PostgresPort = "5432"
 	}
 

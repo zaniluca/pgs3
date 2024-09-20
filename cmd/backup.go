@@ -23,17 +23,26 @@ func init() {
 	backupCmd := &cobra.Command{
 		Use:   "backup",
 		Short: "Create a backup and upload to S3",
-		Run:   backupAction,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if restoreOnStartup && schedule == "" {
+				return fmt.Errorf("the --restore-on-startup flag can only be used if --schedule is set")
+			}
+			return nil
+		},
+		Run: backupAction,
 	}
 	backupCmd.Flags().StringVar(&schedule, "schedule", "", "Cron schedule for periodic backups")
 	backupCmd.Flags().BoolVar(&restoreOnStartup, "restore-on-startup", false, "Before starting the backup, restore the database from the latest backup in S3")
+
 	rootCmd.AddCommand(backupCmd)
 }
 
 func backupAction(cmd *cobra.Command, args []string) {
 	if schedule != "" {
 		if restoreOnStartup {
+			restoreLatestBackup()
 		}
+
 		s, err := gocron.NewScheduler()
 		if err != nil {
 			log.Fatalf("Error creating scheduler: %v", err)
@@ -42,7 +51,7 @@ func backupAction(cmd *cobra.Command, args []string) {
 		if err != nil {
 			log.Fatalf("Error setting up cron job: %v", err)
 		}
-		fmt.Printf("Starting periodic backup with schedule: %s\n", schedule)
+		log.Printf("Starting periodic backup with schedule: %s\n", schedule)
 
 		select {} // Block forever
 	} else {
@@ -50,13 +59,12 @@ func backupAction(cmd *cobra.Command, args []string) {
 	}
 }
 func performBackup() {
-	fmt.Println("Creating backup...")
-
 	env, err := env.Load()
 	if err != nil {
 		log.Fatalf("Error loading environment: %v", err)
 	}
 
+	fmt.Println("Creating backup...")
 	dumpFile, err := createPgDump(env)
 	if err != nil {
 		log.Fatalf("Error creating PostgreSQL dump: %v", err)
@@ -83,7 +91,7 @@ func performBackup() {
 		}
 	}
 
-	fmt.Println("Backup complete.")
+	log.Println("Backup complete.")
 }
 
 func createPgDump(env *env.Env) (string, error) {
