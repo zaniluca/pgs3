@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -48,10 +49,16 @@ func backupAction(cmd *cobra.Command, args []string) {
 		if err != nil {
 			log.Fatalf("Error creating scheduler: %v", err)
 		}
+
 		_, err = s.NewJob(gocron.CronJob(schedule, false), gocron.NewTask(performBackup))
 		if err != nil {
+			if errors.Is(err, gocron.ErrCronJobParse) {
+				log.Fatalf("Schedule is invalid: %v", schedule)
+			}
 			log.Fatalf("Error setting up cron job: %v", err)
 		}
+
+		s.Start()
 		log.Printf("Starting periodic backup with schedule: %s\n", schedule)
 
 		select {} // Block forever
@@ -59,6 +66,7 @@ func backupAction(cmd *cobra.Command, args []string) {
 		performBackup()
 	}
 }
+
 func performBackup() {
 	env, err := env.Load()
 	if err != nil {

@@ -13,7 +13,6 @@ import (
 )
 
 var (
-	// timestamp string
 	latest bool
 )
 
@@ -25,11 +24,8 @@ func init() {
 		Short: "Restore a backup from S3",
 		Run:   restoreAction,
 	}
-	// restoreCmd.Flags().StringVarP(&timestamp, "timestamp", "t", "", "Timestamp of the backup to restore")
 	restoreCmd.Flags().BoolVar(&latest, "latest", false, "Restore the latest backup")
 
-	// restoreCmd.MarkFlagsMutuallyExclusive("timestamp", "latest")
-	// restoreCmd.MarkFlagsOneRequired("timestamp", "latest")
 	restoreCmd.MarkFlagRequired("latest")
 	rootCmd.AddCommand(restoreCmd)
 }
