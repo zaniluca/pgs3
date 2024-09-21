@@ -24,7 +24,7 @@ func init() {
 		Short: "Restore a backup from S3",
 		Run:   restoreAction,
 	}
-	restoreCmd.Flags().BoolVar(&latest, "latest", false, "Restore the latest backup")
+	restoreCmd.Flags().BoolVar(&latest, "latest", false, "Restore the latest backup (required)")
 
 	restoreCmd.MarkFlagRequired("latest")
 	rootCmd.AddCommand(restoreCmd)

@@ -34,7 +34,7 @@ func init() {
 		Run: backupAction,
 	}
 	backupCmd.Flags().StringVar(&schedule, "schedule", "", "Cron schedule for periodic backups")
-	backupCmd.Flags().BoolVar(&restoreOnStartup, "restore-on-startup", false, "Before starting the backup, restore the database from the latest backup in S3")
+	backupCmd.Flags().BoolVar(&restoreOnStartup, "restore-on-startup", false, "Before starting the backup, restore the database from the latest backup in S3 (requires --schedule)")
 
 	rootCmd.AddCommand(backupCmd)
 }
