@@ -90,7 +90,10 @@ func performBackup() {
 	}
 
 	// Remove local dump file
-	os.Remove(dumpFile)
+	err = os.Remove(dumpFile)
+	if err != nil {
+		log.Fatalf("Error removing local dump file: %v", err)
+	}
 
 	if env.BackupKeepDays > 0 {
 		cutoffDate := time.Now().AddDate(0, 0, -env.BackupKeepDays)

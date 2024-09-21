@@ -41,7 +41,7 @@ func restoreAction(cmd *cobra.Command, args []string) {
 func restoreLatestBackup() {
 	env, err := env.Load()
 	if err != nil {
-		log.Printf("Error loading environment: %v\n", err)
+		log.Fatalf("Error loading environment: %v\n", err)
 	}
 
 	s3Client, err := s3.NewClient(env.S3AccessKeyID, env.S3SecretAccessKey, env.S3Region, env.S3Endpoint)
@@ -51,20 +51,24 @@ func restoreLatestBackup() {
 
 	latestBackupKey, err := s3Client.LatestBackup(env.S3Bucket)
 	if err != nil {
-		log.Printf("Error downloading latest backup: %v\n", err)
+		log.Fatalf("Error downloading latest backup: %v\n", err)
 	}
 
 	_, err = s3Client.DownloadFile(env.S3Bucket, latestBackupKey, backupFile)
 	if err != nil {
-		log.Printf("Error downloading latest backup: %v\n", err)
+		log.Fatalf("Error downloading latest backup: %v\n", err)
 	}
 	log.Printf("Downloaded latest backup from S3: %s\n", latestBackupKey)
 
 	err = restorePgDump(backupFile, env)
 	if err != nil {
-		log.Printf("Error restoring backup: %v\n", err)
+		log.Fatalf("Error restoring backup: %v\n", err)
 	}
-	os.Remove(backupFile)
+	// Remove local dump file
+	err = os.Remove(backupFile)
+	if err != nil {
+		log.Fatalf("Error removing local dump file: %v\n", err)
+	}
 
 	log.Println("Latest backup restored")
 }

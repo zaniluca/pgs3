@@ -11,6 +11,15 @@ var (
 	rootCmd = &cobra.Command{
 		Use:   "pg-s3-toolkit",
 		Short: "Backup and restore PostgreSQL databases to/from S3",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return fmt.Errorf("no command specified")
+			}
+			return nil
+		},
+		CompletionOptions: cobra.CompletionOptions{
+			DisableDefaultCmd: true,
+		},
 	}
 )
 
