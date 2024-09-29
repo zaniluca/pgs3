@@ -1,5 +1,7 @@
 FROM golang:alpine AS build
 
+WORKDIR /app
+
 COPY go.mod go.sum ./
 RUN go mod download
 
@@ -13,6 +15,6 @@ LABEL org.opencontainers.image.source=https://github.com/zaniluca/pgs3
 LABEL org.opencontainers.image.description="PGS3, a toolkit for managing PostgreSQL backups and restores with S3"
 LABEL org.opencontainers.image.licenses=MIT
 
-COPY --from=build pgs3 .
+COPY --from=build /app/pgs3 /pgs3
 
 ENTRYPOINT ["./pgs3"]

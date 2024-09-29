@@ -37,9 +37,9 @@ func init() {
 	}
 
 	// Postgres flags
-	backupCmd.Flags().StringVarP(&envConfig.PostgresDb, "postgres-db", "d", "", "PostgreSQL Database name, or set POSTGRES_DB env  (required)")
+	backupCmd.Flags().StringVarP(&envConfig.PostgresDb, "postgres-db", "d", "", "PostgreSQL Database name, or set POSTGRES_DB env (required)")
 	backupCmd.Flags().StringVarP(&envConfig.PostgresUser, "postgres-user", "U", "", "PostgreSQL user, or set POSTGRES_USER env (required)")
-	backupCmd.Flags().StringVarP(&envConfig.PostgresPassword, "postgres-password", "P", "", "PostgreSQL password, or set POSTGRES_PASSWORD env  (required)")
+	backupCmd.Flags().StringVarP(&envConfig.PostgresPassword, "postgres-password", "P", "", "PostgreSQL password, or set POSTGRES_PASSWORD env (required)")
 	backupCmd.Flags().StringVarP(&envConfig.PostgresHost, "postgres-host", "H", "localhost", "PostgreSQL host")
 	backupCmd.Flags().StringVarP(&envConfig.PostgresPort, "postgres-port", "p", "5432", "PostgreSQL port")
 	backupCmd.MarkFlagRequired("postgres-db")
@@ -49,8 +49,8 @@ func init() {
 	backupCmd.Flags().StringVar(&envConfig.AwsS3Endpoint, "s3-endpoint", "", "AWS S3 custom endpoint")
 	backupCmd.Flags().StringVarP(&envConfig.AwsS3Bucket, "s3-bucket", "b", "", "AWS S3 Bucket name (required)")
 	backupCmd.Flags().StringVarP(&envConfig.AwsRegion, "aws-region", "r", "", "AWS Region the bucket is stored (required)")
-	backupCmd.Flags().StringVar(&envConfig.AwsAccessKeyId, "aws-access-key-id", "", "AWS Key ID, or set AWS_ACCESS_KEY_ID env  (required)")
-	backupCmd.Flags().StringVar(&envConfig.AwsSecretAccessKey, "aws-secret-access-key", "", "AWS Secret Key, or set AWS_SECRET_ACCESS_KEY env  (required)")
+	backupCmd.Flags().StringVar(&envConfig.AwsAccessKeyId, "aws-access-key-id", "", "AWS Key ID, or set AWS_ACCESS_KEY_ID env (required)")
+	backupCmd.Flags().StringVar(&envConfig.AwsSecretAccessKey, "aws-secret-access-key", "", "AWS Secret Key, or set AWS_SECRET_ACCESS_KEY env (required)")
 	backupCmd.MarkFlagRequired("s3-bucket")
 	backupCmd.MarkFlagRequired("aws-region")
 	backupCmd.MarkFlagRequired("aws-access-key-id")

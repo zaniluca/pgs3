@@ -26,13 +26,11 @@ var (
 	rootCmd = &cobra.Command{
 		Use:   "pgs3",
 		Short: "Backup and restore PostgreSQL databases to/from S3",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				return fmt.Errorf("no command specified")
 			}
-			return nil
-		},
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+
 			envConfig.PostgresDb = getEnvOrFlag(cmd, "POSTGRES_DB", "postgres-db")
 			envConfig.PostgresUser = getEnvOrFlag(cmd, "POSTGRES_USER", "postgres-user")
 			envConfig.PostgresPassword = getEnvOrFlag(cmd, "POSTGRES_PASSWORD", "postgres-password")
@@ -43,6 +41,8 @@ var (
 			envConfig.AwsRegion = getEnvOrFlag(cmd, "AWS_REGION", "aws-region")
 			envConfig.AwsAccessKeyId = getEnvOrFlag(cmd, "AWS_ACCESS_KEY_ID", "aws-access-key-id")
 			envConfig.AwsSecretAccessKey = getEnvOrFlag(cmd, "AWS_SECRET_ACCESS_KEY", "aws-secret-access-key")
+
+			return nil
 		},
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
