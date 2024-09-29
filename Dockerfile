@@ -5,10 +5,10 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o pg-s3-toolkit .
+RUN CGO_ENABLED=0 GOOS=linux go build -o pgs3 .
 
 FROM alpine:latest
 
-COPY --from=build pg-s3-toolkit .
+COPY --from=build pgs3 .
 
-ENTRYPOINT ["./pg-s3-toolkit"]
+ENTRYPOINT ["./pgs3"]

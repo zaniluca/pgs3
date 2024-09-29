@@ -3,7 +3,6 @@ package s3
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -50,7 +49,7 @@ func (c S3Client) UploadFile(bucket, file string) error {
 }
 
 func (c S3Client) RemoveOldBackups(bucket string, before time.Time) error {
-	log.Printf("Removing backups older than %s\n", before)
+	fmt.Printf("Removing backups older than %s\n", before)
 	resp, err := c.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(bucket)})
 	if err != nil {
 		return err
@@ -74,7 +73,7 @@ func (c S3Client) RemoveOldBackups(bucket string, before time.Time) error {
 }
 
 func (c S3Client) DownloadFile(bucket, key, file string) (*os.File, error) {
-	log.Printf("Downloading %s/%s to %s\n", bucket, key, file)
+	fmt.Printf("Downloading %s/%s to %s\n", bucket, key, file)
 	localFile, err := os.Create(file)
 	if err != nil {
 		return nil, err

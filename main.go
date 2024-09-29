@@ -1,6 +1,6 @@
 package main
 
-import "github.com/zaniluca/pg-s3-toolkit/cmd"
+import "github.com/zaniluca/pgs3/cmd"
 
 func main() {
 	cmd.Execute()

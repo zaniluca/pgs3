@@ -1,4 +1,4 @@
-# PostgreSQL S3 Toolkit
+# PGS3
 
 A collection of scripts to help manage PostgreSQL backups to S3.
 

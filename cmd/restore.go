@@ -6,15 +6,13 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/zaniluca/pg-s3-toolkit/internal/env"
-	"github.com/zaniluca/pg-s3-toolkit/internal/s3"
+	"github.com/zaniluca/pgs3/internal/env"
+	"github.com/zaniluca/pgs3/internal/s3"
 
 	"github.com/spf13/cobra"
 )
 
-var (
-	latest bool
-)
+var latest bool
 
 const backupFile = "backup.dump"
 
@@ -25,8 +23,8 @@ func init() {
 		Run:   restoreAction,
 	}
 	restoreCmd.Flags().BoolVar(&latest, "latest", false, "Restore the latest backup (required)")
-
 	restoreCmd.MarkFlagRequired("latest")
+
 	rootCmd.AddCommand(restoreCmd)
 }
 
