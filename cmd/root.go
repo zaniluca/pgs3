@@ -54,8 +54,8 @@ var (
 // getEnvOrFlag checks for an environment variable first, then falls back to the flag value
 func getEnvOrFlag(cmd *cobra.Command, envName, flagName string) string {
 	envValue := os.Getenv("PGS3_" + envName)
-	cmd.Flags().Set(flagName, envValue)
 	if envValue != "" {
+		cmd.Flags().Set(flagName, envValue)
 		return envValue
 	}
 
