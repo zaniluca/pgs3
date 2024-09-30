@@ -2,17 +2,19 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 
-	"github.com/zaniluca/pgs3/internal/env"
 	"github.com/zaniluca/pgs3/internal/s3"
 
 	"github.com/spf13/cobra"
 )
 
-var latest bool
+type RestoreConfig struct {
+	Latest bool
+}
+
+var restoreCfg RestoreConfig
 
 const backupFile = "backup.dump"
 
@@ -20,67 +22,69 @@ func init() {
 	restoreCmd := &cobra.Command{
 		Use:   "restore",
 		Short: "Restore a backup from S3",
-		Run:   restoreAction,
+		RunE:  restoreAction,
 	}
-	restoreCmd.Flags().BoolVar(&latest, "latest", false, "Restore the latest backup (required)")
+
+	setCommonFlags(restoreCmd)
+
+	// Restore flags
+	restoreCmd.Flags().BoolVar(&restoreCfg.Latest, "latest", false, "Restore the latest backup (required)")
 	restoreCmd.MarkFlagRequired("latest")
 
 	rootCmd.AddCommand(restoreCmd)
 }
 
-func restoreAction(cmd *cobra.Command, args []string) {
-	if latest {
-		restoreLatestBackup()
-
-		return
+func restoreAction(cmd *cobra.Command, args []string) error {
+	if restoreCfg.Latest {
+		return restoreLatestBackup()
 	}
+
+	return nil
 }
 
-func restoreLatestBackup() {
-	env, err := env.Load()
+func restoreLatestBackup() error {
+	s3Client, err := s3.NewClient(envCfg.AwsAccessKeyId, envCfg.AwsSecretAccessKey, envCfg.AwsRegion, envCfg.AwsS3Endpoint)
 	if err != nil {
-		log.Fatalf("Error loading environment: %v\n", err)
+		return fmt.Errorf("error creating S3 client: %v", err)
 	}
 
-	s3Client, err := s3.NewClient(env.S3AccessKeyID, env.S3SecretAccessKey, env.S3Region, env.S3Endpoint)
+	latestBackupKey, err := s3Client.LatestBackup(envCfg.AwsS3Bucket)
 	if err != nil {
-		log.Fatalf("Error creating S3 client: %v", err)
+		return fmt.Errorf("error downloading latest backup: %v", err)
 	}
 
-	latestBackupKey, err := s3Client.LatestBackup(env.S3Bucket)
+	_, err = s3Client.DownloadFile(envCfg.AwsS3Bucket, latestBackupKey, backupFile)
+	defer func() {
+		err = os.Remove(backupFile)
+		if err != nil {
+			err = fmt.Errorf("error removing local dump file: %v", err)
+		}
+	}()
+
 	if err != nil {
-		log.Fatalf("Error downloading latest backup: %v\n", err)
+		return fmt.Errorf("error downloading latest backup: %v", err)
+	}
+	fmt.Printf("Downloaded latest backup from S3: %s\n", latestBackupKey)
+
+	err = restorePgDump(backupFile)
+	if err != nil {
+		return fmt.Errorf("error restoring backup: %v", err)
 	}
 
-	_, err = s3Client.DownloadFile(env.S3Bucket, latestBackupKey, backupFile)
-	if err != nil {
-		log.Fatalf("Error downloading latest backup: %v\n", err)
-	}
-	log.Printf("Downloaded latest backup from S3: %s\n", latestBackupKey)
-
-	err = restorePgDump(backupFile, env)
-	if err != nil {
-		log.Fatalf("Error restoring backup: %v\n", err)
-	}
-	// Remove local dump file
-	err = os.Remove(backupFile)
-	if err != nil {
-		log.Fatalf("Error removing local dump file: %v\n", err)
-	}
-
-	log.Println("Latest backup restored")
+	fmt.Println("Latest backup restored")
+	return err
 }
 
-func restorePgDump(file string, env *env.Env) error {
+func restorePgDump(file string) error {
 	cmd := exec.Command("pg_restore",
-		"-h", env.PostgresHost,
-		"-p", env.PostgresPort,
-		"-U", env.PostgresUser,
-		"-d", env.PostgresDatabase,
+		"-h", envCfg.PostgresHost,
+		"-p", envCfg.PostgresPort,
+		"-U", envCfg.PostgresUser,
+		"-d", envCfg.PostgresDb,
 		"--clean",
 		"--if-exists",
 		file,
 	)
-	cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", env.PostgresPassword))
+	cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", envCfg.PostgresPassword))
 	return cmd.Run()
 }
