@@ -18,8 +18,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "${DB_PORT}:5432"
-    volumes:
-      - db_volume:/var/lib/postgresql/data
 
   pgs3:
     image: "ghcr.io/zaniluca/pgs3:latest" # <--
@@ -44,6 +42,12 @@ Otherwise you can install it via `go get`
 go get github.com/zaniluca/pgs3
 ```
 
+or pull the Docker image from the GitHub Container Registry
+
+```
+docker pull ghcr.io/zaniluca/pgs3:latest
+```
+
 ## Configuration
 
 The CLI requires some variables to be defined in order to access the PostgreSQL database and the S3 bucket. These can be passed as environment variables or as flags when running the CLI. They can be passed in both `restore` and `backup` commands.
@@ -53,13 +57,15 @@ The CLI requires some variables to be defined in order to access the PostgreSQL 
 | `--postgres-db` or `-d`       | PostgreSQL Database name                                                       | `PGS3_POSTGRES_DB`           | Yes      |
 | `--postgres-user` or `-U`     | PostgreSQL user                                                                | `PGS3_POSTGRES_USER`         | Yes      |
 | `--postgres-password` or `-P` | PostgreSQL password                                                            | `PGS3_POSTGRES_PASSWORD`     | Yes      |
-| `--postgres-host` or `-H`     | PostgreSQL host                                                                | `PGS3_POSTGRES_HOST`         | No       |
-| `--postgres-port` or `-p`     | PostgreSQL port                                                                | `PGS3_POSTGRES_PORT`         | No       |
+| `--postgres-host` or `-H`     | PostgreSQL host (default: localhost)                                           | `PGS3_POSTGRES_HOST`         | No       |
+| `--postgres-port` or `-p`     | PostgreSQL port (default: 5432)                                                | `PGS3_POSTGRES_PORT`         | No       |
 | `--aws-access-key-id`         | AWS Key ID with permission to Read and Write the specific S3 Bucket (at least) | `PGS3_AWS_ACCESS_KEY_ID`     | Yes      |
 | `--aws-secret-access-key`     | AWS Secret Key, comes with the AWS Key ID                                      | `PGS3_AWS_SECRET_ACCESS_KEY` | Yes      |
 | `--aws-region` or `-r`        | AWS Region the bucket is stored                                                | `PGS3_AWS_REGION`            | Yes      |
 | `--s3-bucket` or `-b`         | AWS S3 Bucket name (must be accessible with provided access key)               | `PGS3_AWS_S3_BUCKET`         | Yes      |
 | `--s3-endpoint`               | AWS S3 custom endpoint if using a custom S3 compatible provider                | `PGS3_AWS_S3_ENDPOINT`       | No       |
+
+> To obtain the AWS credentials for S3 Usage restricted to a specific bucket, you can follow the [official documentation](https://docs.aws.amazon.com/solutions/latest/data-transfer-hub/set-up-credentials-for-amazon-s3.html)
 
 ## `backup` command
 
