@@ -1,4 +1,4 @@
-package s3
+package pgs3
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ type S3Client struct {
 	*s3.S3
 }
 
-func NewClient(accessKeyId, secretAccessKey, region, endpoint string) (*S3Client, error) {
+func NewS3Client(accessKeyId, secretAccessKey, region, endpoint string) (*S3Client, error) {
 	sess, err := session.NewSession(&aws.Config{
 		Region:           aws.String(region),
 		Endpoint:         aws.String(endpoint),
@@ -49,7 +49,6 @@ func (c S3Client) UploadFile(bucket, file string) error {
 }
 
 func (c S3Client) RemoveOldBackups(bucket string, before time.Time) error {
-	fmt.Printf("Removing backups older than %s\n", before)
 	resp, err := c.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: aws.String(bucket)})
 	if err != nil {
 		return err
@@ -73,7 +72,6 @@ func (c S3Client) RemoveOldBackups(bucket string, before time.Time) error {
 }
 
 func (c S3Client) DownloadFile(bucket, key, file string) (*os.File, error) {
-	fmt.Printf("Downloading %s/%s to %s\n", bucket, key, file)
 	localFile, err := os.Create(file)
 	if err != nil {
 		return nil, err

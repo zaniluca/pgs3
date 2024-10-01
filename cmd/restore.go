@@ -3,11 +3,9 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"os/exec"
-
-	"github.com/zaniluca/pgs3/internal/s3"
 
 	"github.com/spf13/cobra"
+	pgs3 "github.com/zaniluca/pgs3/internal"
 )
 
 type RestoreConfig struct {
@@ -43,7 +41,7 @@ func restoreAction(cmd *cobra.Command, args []string) error {
 }
 
 func restoreLatestBackup() error {
-	s3Client, err := s3.NewClient(envCfg.AwsAccessKeyId, envCfg.AwsSecretAccessKey, envCfg.AwsRegion, envCfg.AwsS3Endpoint)
+	s3Client, err := pgs3.NewS3Client(envCfg.AwsAccessKeyId, envCfg.AwsSecretAccessKey, envCfg.AwsRegion, envCfg.AwsS3Endpoint)
 	if err != nil {
 		return fmt.Errorf("error creating S3 client: %v", err)
 	}
@@ -53,6 +51,7 @@ func restoreLatestBackup() error {
 		return fmt.Errorf("error downloading latest backup: %v", err)
 	}
 
+	fmt.Printf("Downloading %s/%s to %s\n", envCfg.AwsS3Bucket, latestBackupKey, backupFile)
 	_, err = s3Client.DownloadFile(envCfg.AwsS3Bucket, latestBackupKey, backupFile)
 	defer func() {
 		err = os.Remove(backupFile)
@@ -66,25 +65,11 @@ func restoreLatestBackup() error {
 	}
 	fmt.Printf("Downloaded latest backup from S3: %s\n", latestBackupKey)
 
-	err = restorePgDump(backupFile)
+	err = pgs3.RestorePgDump(envCfg.PostgresHost, envCfg.PostgresPort, envCfg.PostgresDb, envCfg.PostgresUser, envCfg.PostgresPassword, backupFile)
 	if err != nil {
 		return fmt.Errorf("error restoring backup: %v", err)
 	}
 
 	fmt.Println("Latest backup restored")
 	return err
-}
-
-func restorePgDump(file string) error {
-	cmd := exec.Command("pg_restore",
-		"-h", envCfg.PostgresHost,
-		"-p", envCfg.PostgresPort,
-		"-U", envCfg.PostgresUser,
-		"-d", envCfg.PostgresDb,
-		"--clean",
-		"--if-exists",
-		file,
-	)
-	cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", envCfg.PostgresPassword))
-	return cmd.Run()
 }

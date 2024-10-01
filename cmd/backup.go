@@ -4,14 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
-	"strings"
 	"time"
-
-	"github.com/zaniluca/pgs3/internal/s3"
 
 	"github.com/go-co-op/gocron/v2"
 	"github.com/spf13/cobra"
+	pgs3 "github.com/zaniluca/pgs3/internal"
 )
 
 type BackupConfig struct {
@@ -77,7 +74,7 @@ func backupAction(cmd *cobra.Command, args []string) error {
 
 func performBackup() error {
 	fmt.Println("Creating backup...")
-	dumpFile, err := createPgDump(envCfg.PostgresHost, envCfg.PostgresPort, envCfg.PostgresDb, envCfg.PostgresUser, envCfg.PostgresPassword, "")
+	dumpFile, err := pgs3.CreatePgDump(envCfg.PostgresHost, envCfg.PostgresPort, envCfg.PostgresDb, envCfg.PostgresUser, envCfg.PostgresPassword, "")
 	defer func() {
 		err = os.Remove(dumpFile)
 		if err != nil {
@@ -89,7 +86,7 @@ func performBackup() error {
 		return fmt.Errorf("error creating PostgreSQL dump: %v", err)
 	}
 
-	s3Client, err := s3.NewClient(envCfg.AwsAccessKeyId, envCfg.AwsSecretAccessKey, envCfg.AwsRegion, envCfg.AwsS3Endpoint)
+	s3Client, err := pgs3.NewS3Client(envCfg.AwsAccessKeyId, envCfg.AwsSecretAccessKey, envCfg.AwsRegion, envCfg.AwsS3Endpoint)
 	if err != nil {
 		return fmt.Errorf("error creating S3 client: %v", err)
 	}
@@ -101,6 +98,7 @@ func performBackup() error {
 
 	if backupCfg.KeepDays > 0 {
 		cutoffDate := time.Now().AddDate(0, 0, -backupCfg.KeepDays)
+		fmt.Printf("Removing backups older than %s\n", cutoffDate)
 		err := s3Client.RemoveOldBackups(envCfg.AwsS3Bucket, cutoffDate)
 		if err != nil {
 			return fmt.Errorf("error removing old backups: %v", err)
@@ -109,21 +107,4 @@ func performBackup() error {
 
 	fmt.Println("Backup complete.")
 	return err
-}
-
-func createPgDump(host, port, dbname, user, password, extraOpts string) (string, error) {
-	dumpFile := fmt.Sprintf("%s_%s.dump", dbname, time.Now().Format("2006-01-02T15:04:05"))
-	cmd := exec.Command("pg_dump",
-		"--format=custom",
-		"-h", host,
-		"-p", port,
-		"-U", user,
-		"-d", dbname,
-		"-f", dumpFile,
-	)
-	cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", password))
-	if extraOpts != "" {
-		cmd.Args = append(cmd.Args, strings.Split(extraOpts, " ")...)
-	}
-	return dumpFile, cmd.Run()
 }
